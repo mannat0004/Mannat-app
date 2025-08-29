@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mannat's Bestie App</title>
+  <style>
+    :root {
+      --glass: rgba(255,255,255,.18);
+      --blur: blur(14px);
+      --shadow: 0 18px 60px rgba(0,0,0,.25);
+      --radius: 22px;
+      --brand: #6c5ce7;
+      --brand-2: #fd79a8;
+      --ok: #26de81;
+      --danger: #ff3b30;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, sans-serif;
+      color: #fff;
+      overflow: hidden;
+      background: radial-gradient(1500px 900px at 0% 0%, #3a0ca3, transparent 60%),
+                  radial-gradient(1200px 800px at 100% 100%, #f72585, transparent 60%),
+                  linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      animation: bgShift 18s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgShift {
+      0% { filter: hue-rotate(0deg) saturate(1); }
+      100% { filter: hue-rotate(-25deg) saturate(1.2); }
+    }
+
+    /* Floating orbs background */
+    .orb { position: fixed; border-radius: 50%; filter: blur(20px); opacity: .45; pointer-events: none; }
+    .orb.one  { width: 320px; height: 320px; left: -60px; top: -40px; background: #00d1ff; animation: float 10s ease-in-out infinite; }
+    .orb.two  { width: 260px; height: 260px; right: -50px; bottom: -60px; background: #ff6b6b; animation: float 12s ease-in-out infinite 1s; }
+    .orb.three{ width: 200px; height: 200px; left: 20%; bottom: 10%; background: #ffd166; animation: float 14s ease-in-out infinite .5s; }
+    @keyframes float { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-26px) } }
+
+    /* Pages */
+    .page { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; opacity: 0; pointer-events: none; transform: scale(.98) translateY(8px); transition: opacity .45s ease, transform .45s ease; }
+    .page.active { opacity: 1; pointer-events: auto; transform: scale(1) translateY(0); }
+
+    /* Glass card */
+    .card {
+      width: min(92vw, 440px);
+      background: var(--glass);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      padding: 28px 26px 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .watermark { position: fixed; right: 20px; bottom: 16px; font-weight: 600; opacity: .75; text-shadow: 0 0 18px rgba(255,255,255,.45); letter-spacing: .4px; }
+
+    h1, h2 { margin: 0 0 14px; line-height: 1.15; }
+    h1 { font-size: clamp(22px, 2.6vw + 12px, 34px); }
+    h2 { font-size: clamp(18px, 2.2vw + 10px, 26px); opacity: .95; }
+
+    .field { display: grid; gap: 10px; margin-top: 12px; }
+    input { width: 100%; padding: 14px 14px; border-radius: 14px; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.12); color: #fff; outline: none; transition: .25s ease; font-size: 15px; }
+    input::placeholder { color: rgba(255,255,255,.8); }
+    input:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(0,0,0,.18); }
+    input:focus { border-color: #a29bfe; box-shadow: 0 0 0 6px rgba(162,155,254,.18); background: rgba(255,255,255,.18); }
+
+    .row { display: flex; gap: 10px; align-items: center; justify-content: center; margin-top: 14px; }
+
+    .btn { border: 0; padding: 13px 18px; border-radius: 14px; cursor: pointer; font-weight: 700; letter-spacing: .2px; color: #0b0b0b; transition: transform .18s ease, box-shadow .18s ease, filter .18s ease; backdrop-filter: blur(6px); }
+    .btn.primary { background: linear-gradient(135deg, #a29bfe, #81ecec); color: #141414; }
+    .btn.primary:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 16px 30px rgba(129,236,236,.35); }
+    .btn.danger  { background: linear-gradient(135deg, #ff7675, #e84393); color: #fff; }
+    .btn.danger:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 16px 30px rgba(232,67,147,.35); }
+    .btn.success { background: linear-gradient(135deg, #55efc4, #00b894); color: #08332a; }
+
+    .muted { opacity: .8; font-size: 12px; margin-top: 10px; }
+
+    /* Error overlay (full white) */
+    .error-overlay { position: fixed; inset: 0; background: #fff; color: #111; display: none; z-index: 50; align-items: center; justify-content: center; flex-direction: column; gap: 16px; animation: fade .35s ease; }
+    .error-overlay.show { display: flex; }
+    .error-overlay h2 { color: #111; }
+    .error-overlay .btn { background: #111; color: #fff; }
+    @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+
+    /* Surprise button/emojis */
+    .float-emoji { position: fixed; font-size: 34px; pointer-events: none; animation: rise .9s ease forwards; }
+    @keyframes rise { from { transform: translateY(10px) scale(.6); opacity: .1 } to { transform: translateY(-60px) scale(1.2); opacity: 1 } }
+
+    /* Bestie buttons play */
+    .bestie-box { text-align: center; }
+    #msg { margin-top: 10px; font-weight: 700; }
+
+    /* Final Thank You */
+    .heart { position: fixed; font-size: 28px; pointer-events: none; animation: floatUp 4.2s ease-in forwards; filter: drop-shadow(0 6px 18px rgba(255,255,255,.45)); }
+    @keyframes floatUp { from { transform: translateY(40px) scale(.4) rotate(0); opacity: .2 } to { transform: translateY(-120vh) scale(1.4) rotate(20deg); opacity: 1 } }
+
+  </style>
+</head>
+<body>
+  <!-- BG orbs -->
+  <div class="orb one"></div>
+  <div class="orb two"></div>
+  <div class="orb three"></div>
+
+  <!-- LOGIN PAGE -->
+  <section id="login" class="page active" aria-label="Login Page">
+    <div class="card">
+      <h1>Welcome back 👋</h1>
+      <h2>Login to unlock surprises</h2>
+      <div class="field">
+        <input id="user" placeholder="Username (yomi)" autocomplete="username" />
+        <input id="pass" type="password" placeholder="Password (1234)" autocomplete="current-password" />
+      </div>
+      <div class="row">
+        <button class="btn primary" id="loginBtn">Get Started</button>
+      </div>
+      <div class="muted">Made by Mannat ✨</div>
+    </div>
+  </section>
+
+  <!-- ERROR (WRONG LOGIN) OVERLAY -->
+  <div id="err" class="error-overlay" role="dialog" aria-live="assertive">
+    <h2>😢 yomi yaar sahi id pass dal plz</h2>
+    <button class="btn" id="retry">Fill Again</button>
+  </div>
+
+  <!-- WELCOME / SURPRISE PAGE -->
+  <section id="welcome" class="page" aria-label="Welcome Page">
+    <div class="card" style="text-align:center">
+      <h1>Hy Yomi ✨</h1>
+      <h2 style="opacity:.9">Are you ready?</h2>
+      <div style="height:14px"></div>
+      <button id="surpriseBtn" class="btn danger">Ready for Surprise</button>
+      <div class="muted">Catch me if you can 😂</div>
+    </div>
+  </section>
+
+  <!-- BESTIE PAGE -->
+  <section id="bestie" class="page" aria-label="Bestie Page">
+    <div class="card bestie-box">
+      <h1>Will you be my bestie again? 🥰</h1>
+      <div class="row" style="margin-top:14px">
+        <button id="yes" class="btn success">Yes 💖</button>
+        <button id="no" class="btn danger">No 😜</button>
+      </div>
+      <div id="msg" class="muted"></div>
+    </div>
+  </section>
+
+  <!-- THANK YOU PAGE -->
+  <section id="thanks" class="page" aria-label="Thank You Page">
+    <div class="card" style="text-align:center">
+      <h1>🎉 Thank you for becoming my Bestie again! 💞</h1>
+      <h2 style="opacity:.9">Besties forever — Yomi & Mannat 🤝</h2>
+      <div class="muted">psst… tap anywhere to make hearts fly 💗</div>
+    </div>
+  </section>
+
+  <div class="watermark">Made by Mannat</div>
+
+  <script>
+    // Helpers
+    const qs = (s) => document.querySelector(s);
+    const show = (id) => {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      qs('#' + id).classList.add('active');
+    };
+
+    // LOGIN FLOW
+    const loginBtn = qs('#loginBtn');
+    const retryBtn = qs('#retry');
+    loginBtn.addEventListener('click', () => {
+      const u = qs('#user').value.trim();
+      const p = qs('#pass').value.trim();
+
+      // Allow both yomi/1234 and admin/1234 for convenience
+      const ok = (u === 'yomi' || u === 'admin') && p === '1234';
+
+      if (ok) {
+        // Fancy transition: small emoji burst + page switch
+        burst(['✨','😄','🎈','🤩']);
+        setTimeout(() => show('welcome'), 380);
+      } else {
+        // Full white overlay with message
+        qs('#err').classList.add('show');
+      }
+    });
+    retryBtn.addEventListener('click', () => {
+      qs('#err').classList.remove('show');
+      qs('#user').value = '';
+      qs('#pass').value = '';
+      qs('#user').focus();
+    });
+
+    // SURPRISE PAGE: button runs 4 times + emojis pop
+    let runs = 0;
+    const surpriseBtn = qs('#surpriseBtn');
+    surpriseBtn.addEventListener('mouseenter', () => surpriseBtn.style.filter = 'brightness(1.1)');
+    surpriseBtn.addEventListener('mouseleave', () => surpriseBtn.style.filter = '');
+
+    surpriseBtn.addEventListener('click', () => {
+      runs++;
+      // Move inside the card randomly
+      const card = surpriseBtn.closest('.card');
+      const pad = 24; // padding
+      const maxX = card.clientWidth - surpriseBtn.offsetWidth - pad;
+      const maxY = card.clientHeight - surpriseBtn.offsetHeight - pad - 20;
+      const x = pad + Math.random() * maxX;
+      const y = 70 + Math.random() * maxY; // keep under headings
+      surpriseBtn.style.position = 'absolute';
+      surpriseBtn.style.left = x + 'px';
+      surpriseBtn.style.top = y + 'px';
+
+      // fun emojis
+      burst(['😂','🤣','😜','🤪','😆']);
+
+      if (runs >= 4) {
+        // Small confetti burst then go to bestie
+        setTimeout(() => {
+          burst(['🎉','✨','🎊','💫','⭐️']);
+          show('bestie');
+        }, 280);
+      }
+    });
+
+    function burst(set){
+      for (let i = 0; i < 12; i++) {
+        const e = document.createElement('div');
+        e.className = 'float-emoji';
+        e.textContent = set[Math.floor(Math.random()*set.length)];
+        const x = Math.random() * window.innerWidth;
+        const y = Math.random() * window.innerHeight;
+        e.style.left = x + 'px';
+        e.style.top = y + 'px';
+        document.body.appendChild(e);
+        setTimeout(() => e.remove(), 950);
+      }
+    }
+
+    // BESTIE PAGE: No runs away, Yes celebrates
+    const noBtn = qs('#no');
+    const yesBtn = qs('#yes');
+    const msg = qs('#msg');
+    let noClicks = 0;
+
+    noBtn.addEventListener('click', () => {
+      noClicks++;
+      msg.textContent = 'plz haa krde 🥺';
+      // shrink No a bit, grow Yes a bit
+      noBtn.style.transform = `scale(${Math.max(0.55, 1 - noClicks*0.1)}) rotate(${(Math.random()*12-6).toFixed(2)}deg)`;
+      yesBtn.style.transform = `scale(${1 + noClicks*0.08})`;
+
+      // move No across the viewport (fixed so it can escape the card)
+      const margin = 60;
+      const x = margin + Math.random() * (window.innerWidth - 2*margin - noBtn.offsetWidth);
+      const y = margin + Math.random() * (window.innerHeight - 2*margin - noBtn.offsetHeight);
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+
+      // playful shake on move
+      noBtn.animate([
+        { transform: 'translate(0,0)' },
+        { transform: 'translate(4px,-4px)' },
+        { transform: 'translate(-3px,3px)' },
+        { transform: 'translate(0,0)' }
+      ], { duration: 300 });
+
+      // giggle
+      burst(['😂','😝','😹']);
+    });
+
+    yesBtn.addEventListener('mouseenter', () => yesBtn.style.filter = 'brightness(1.08) saturate(1.2)');
+    yesBtn.addEventListener('mouseleave', () => yesBtn.style.filter = '');
+
+    yesBtn.addEventListener('click', () => {
+      // big celebration then thank you page
+      burst(['🎉','💖','✨','💫','🥳','🌟']);
+      setTimeout(() => show('thanks'), 300);
+      // hearts fly continuously for a moment
+      let i = 0; const hearts = setInterval(() => { makeHeart(); if(++i>28) clearInterval(hearts); }, 120);
+    });
+
+    // THANK YOU PAGE: tap/click anywhere to spawn hearts
+    qs('#thanks').addEventListener('click', makeHeart);
+    function makeHeart(){
+      const h = document.createElement('div');
+      h.className = 'heart';
+      h.textContent = Math.random() > .5 ? '💖' : '💘';
+      h.style.left = Math.random()*window.innerWidth + 'px';
+      h.style.bottom = '-20px';
+      document.body.appendChild(h);
+      setTimeout(()=> h.remove(), 4500);
+    }
+  </script>
+</body>
+</html>
